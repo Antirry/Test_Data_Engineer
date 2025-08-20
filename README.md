@@ -1,4 +1,15 @@
-# ETL-DAG на Apache Airflow и ClickHouse Проект настраивает DAG, который раз в минуту: 1. Генерирует/забирает CSV `impressions.csv`, `clicks.csv`. 2. Валидирует и очищает данные. 3. Загружает в ClickHouse (`raw_impressions`, `raw_clicks`). 4. Запускает два проверочных SQL (CTR, список IP за 24 ч) и выводит результаты в лог. 5. Применяет анти-фрод правило (>5 кликов за 10 с с одного IP) и пишет в `fraud_alerts`. ## Структура репозитория - `docker-compose.yml` — поднимает Airflow и ClickHouse. - `Dockerfile` — устанавливает зависимости для DAG. - `clickhouse/ddl.sql` — DDL для таблиц. - `queries.sql` — SQL для агрегатов. - `scripts/generate_data.py` — генератор тестовых CSV. - `dags/etl_ads.py` — основной DAG. - `data/` — монтируется в контейнер, сюда кладутся CSV. ## Запуск 1. Клонировать репозиторий и перейти в корень: ```bash git clone <repo_url> cd <repo_dir>
+# ETL-DAG на Apache Airflow и ClickHouse
+
+Проект настраивает DAG, который раз в минуту: 
+1. Генерирует/забирает CSV `impressions.csv`, `clicks.csv`.
+2. Валидирует и очищает данные.
+3. Загружает в ClickHouse (`raw_impressions`, `raw_clicks`).
+4. Запускает два проверочных SQL (CTR, список IP за 24 ч) и выводит результаты в лог.
+5. Применяет анти-фрод правило (>5 кликов за 10 с с одного IP) и пишет в `fraud_alerts`. ## Структура репозитория - `docker-compose.yml` — поднимает Airflow и ClickHouse. - `Dockerfile` — устанавливает зависимости для DAG. - `clickhouse/ddl.sql` — DDL для таблиц. - `queries.sql` — SQL для агрегатов. - `scripts/generate_data.py` — генератор тестовых CSV. - `dags/etl_ads.py` — основной DAG. - `data/` — монтируется в контейнер, сюда кладутся CSV. 
+
+## Запуск 1. Клонировать репозиторий и перейти в корень:
+```bash
+git clone https://github.com/Antirry/Test_Data_Engineer.git cd Test_Data_Engineer
 2. Собрать и запустить сервисы:bashdocker-compose up -d --build
 3. Перейти в Web UI Airflow:http://localhost:8080Логин/пароль: admin/admin
 4. Проверить доступность ClickHouse:bashdocker exec -it clickhouse clickhouse-client --query "SELECT version();"
@@ -10,7 +21,7 @@
 3. Анти-фродbashdocker exec -it clickhouse clickhouse-client \ --query "SELECT * FROM default.fraud_alerts LIMIT 10;"
 
 ## Состав репозитория
-```py
+```bash
 ├── dags/
 │   └── etl_ads.py                # DAG Airflow: экстракция → валидация → загрузка → агрегаты → анти-фрод
 ├── clickhouse/
