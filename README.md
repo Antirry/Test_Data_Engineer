@@ -1,93 +1,30 @@
-# Airflow + ClickHouse: ETL для рекламы с антифродом
-
-## Описание
-Этот проект демонстрирует оркестрацию ETL-процесса в Apache Airflow для загрузки тестовых CSV-файлов с показами и кликами в ClickHouse, выполнения базовых агрегаций и запуска упрощённого антифрод-правила.
-
-## Архитектура пайплайна
-1. Extract — получение тестовых CSV (impressions.csv, clicks.csv)
-2. Validate & Clean — проверка схемы, очистка мусора, дедупликация, нормализация времени в UTC
-3. Load — загрузка данных в raw_impressions и raw_clicks
-4. Aggregate — топ-5 кампаний по CTR за последние 30 минут
-5. Fraud Check — выявление IP с >5 кликов за 10 секунд
-6. Alerts — запись срабатываний в таблицу fraud_alerts
+# ETL-DAG на Apache Airflow и ClickHouse Проект настраивает DAG, который раз в минуту: 1. Генерирует/забирает CSV `impressions.csv`, `clicks.csv`. 2. Валидирует и очищает данные. 3. Загружает в ClickHouse (`raw_impressions`, `raw_clicks`). 4. Запускает два проверочных SQL (CTR, список IP за 24 ч) и выводит результаты в лог. 5. Применяет анти-фрод правило (>5 кликов за 10 с с одного IP) и пишет в `fraud_alerts`. ## Структура репозитория - `docker-compose.yml` — поднимает Airflow и ClickHouse. - `Dockerfile` — устанавливает зависимости для DAG. - `clickhouse/ddl.sql` — DDL для таблиц. - `queries.sql` — SQL для агрегатов. - `scripts/generate_data.py` — генератор тестовых CSV. - `dags/etl_ads.py` — основной DAG. - `data/` — монтируется в контейнер, сюда кладутся CSV. ## Запуск 1. Клонировать репозиторий и перейти в корень: ```bash git clone <repo_url> cd <repo_dir>
+2. Собрать и запустить сервисы:bashdocker-compose up -d --build
+3. Перейти в Web UI Airflow:http://localhost:8080Логин/пароль: admin/admin
+4. Проверить доступность ClickHouse:bashdocker exec -it clickhouse clickhouse-client --query "SELECT version();"
+Как запустить DAG вручную
+• В UI Airflow: найти etl_ads → Trigger DAG.
+Как проверять результаты
+1. Загрузка данныхbashdocker exec -it clickhouse clickhouse-client \ --query "SELECT count() FROM default.raw_impressions;" docker exec -it clickhouse clickhouse-client \ --query "SELECT count() FROM default.raw_clicks;"
+2. Агрегации Смотрите логи таска run_aggregations в UI или в stdout контейнера:bashdocker logs airflow
+3. Анти-фродbashdocker exec -it clickhouse clickhouse-client \ --query "SELECT * FROM default.fraud_alerts LIMIT 10;"
 
 ## Состав репозитория
 ```py
 ├── dags/
-│   └── etl_ads.py
+│   └── etl_ads.py                # DAG Airflow: экстракция → валидация → загрузка → агрегаты → анти-фрод
 ├── clickhouse/
-│   └── ddl.sql
+│   └── ddl.sql                   # SQL-скрипт создания таблиц в ClickHouse
 ├── scripts/
-│   └── generate_data.py
+│   └── generate_data.py          # Генератор тестовых impressions.csv и clicks.csv
 ├── data/
-│   ├── impressions.csv
-│   └── clicks.csv
-├── docker-compose.yml
-└── README.md
+│   ├── impressions.csv           # Пример входных данных (показы)
+│   └── clicks.csv                # Пример входных данных (клики)
+├── docker-compose.yml            # Конфигурация сервисов Airflow + ClickHouse
+├── Dockerfile                    # Образ Airflow с зависимостями (clickhouse-driver, pandas)
+├── queries.sql                   # SQL для проверочных агрегатов
+└── README.md                     # Инструкции по запуску и проверке
 ```
-## Развёртывание
-### 1. Клонировать репозиторий
-```bash
-git clone https://github.com/Antirry/Test-Data-Engineer && cd Test-Data-Engineer
-```
-
-### 2. Запустить инфраструктуру
-```bash
-docker-compose up -d
-```
-После запуска будут доступны:
-- Airflow Web UI: http://localhost:8080  (логин/пароль: admin / admin)
-- ClickHouse HTTP: http://localhost:8123
-
-## Инициализация ClickHouse
-DDL-скрипт создаст необходимые таблицы:
-```bash
-docker exec -it clickhouse clickhouse-client --multiquery < /clickhouse/ddl.sql
-```
-
-**Структура таблиц**:
-- raw_impressions / raw_clicks: события показов и кликов
-- fraud_alerts: алерты антифрода
-
-## Генерация тестовых данных
-```bash
-docker exec -it airflow python /scripts/generate_data.py
-```
-Файлы появятся в /data внутри контейнера и будут готовы к валидации/загрузке.
-
-## Запуск DAG
-1. В Airflow UI найти DAG etl_ads
-2. Включить (On) и запустить (Trigger DAG)
-
-## Проверка загрузки и агрегаций
-### 1. Кол-во строк
-```sql
-SELECT count() FROM raw_impressions;
-SELECT count() FROM raw_clicks;
-```
-
-### 2. Топ-5 кампаний по CTR
-```sql
-SELECT campaign_id, count() AS clicks
-FROM raw_clicks
-WHERE ts > now() - INTERVAL 30 MINUTE
-GROUP BY campaign_id
-ORDER BY clicks DESC
-LIMIT 5;
-```
-
-### 3. Последние антифрод-срабатывания
-```sql
-SELECT * FROM fraud_alerts
-WHERE ts > now() - INTERVAL 24 HOUR;
-```
-
-## Планировщик и надёжность
-- Периодичность: @minutely (каждую минуту)
-- Retries: 2
-- Retry delay: 1 минута
-- Зависимости:  
- extract → validate → load → aggregate → fraud_check
 
 ## Теоретические заметки
 
