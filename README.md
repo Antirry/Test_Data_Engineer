@@ -10,6 +10,7 @@
 ## Запуск 1. Клонировать репозиторий и перейти в корень:
 ```bash
 git clone https://github.com/Antirry/Test_Data_Engineer.git cd Test_Data_Engineer
+```
 2. Собрать и запустить сервисы:bashdocker-compose up -d --build
 3. Перейти в Web UI Airflow:http://localhost:8080Логин/пароль: admin/admin
 4. Проверить доступность ClickHouse:bashdocker exec -it clickhouse clickhouse-client --query "SELECT version();"
@@ -19,7 +20,7 @@ git clone https://github.com/Antirry/Test_Data_Engineer.git cd Test_Data_Enginee
 1. Загрузка данныхbashdocker exec -it clickhouse clickhouse-client \ --query "SELECT count() FROM default.raw_impressions;" docker exec -it clickhouse clickhouse-client \ --query "SELECT count() FROM default.raw_clicks;"
 2. Агрегации Смотрите логи таска run_aggregations в UI или в stdout контейнера:bashdocker logs airflow
 3. Анти-фродbashdocker exec -it clickhouse clickhouse-client \ --query "SELECT * FROM default.fraud_alerts LIMIT 10;"
-```
+
 ## Состав репозитория
 ```bash
 ├── dags/
