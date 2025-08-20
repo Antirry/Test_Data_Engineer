@@ -11,15 +11,17 @@
 ```bash
 git clone https://github.com/Antirry/Test_Data_Engineer.git cd Test_Data_Engineer
 ```
-2. Собрать и запустить сервисы:bashdocker-compose up -d --build
-3. Перейти в Web UI Airflow:http://localhost:8080Логин/пароль: admin/admin
-4. Проверить доступность ClickHouse:bashdocker exec -it clickhouse clickhouse-client --query "SELECT version();"
+2. Собрать и запустить сервисы:```bash
+ docker-compose up -d --build```
+4. Перейти в Web UI Airflow:http://localhost:8080Логин/пароль: admin/admin
+5. Проверить доступность ClickHouse:```bash
+docker exec -it clickhouse clickhouse-client --query "SELECT version();"```
 Как запустить DAG вручную
 • В UI Airflow: найти etl_ads → Trigger DAG.
 Как проверять результаты
-1. Загрузка данныхbashdocker exec -it clickhouse clickhouse-client \ --query "SELECT count() FROM default.raw_impressions;" docker exec -it clickhouse clickhouse-client \ --query "SELECT count() FROM default.raw_clicks;"
-2. Агрегации Смотрите логи таска run_aggregations в UI или в stdout контейнера:bashdocker logs airflow
-3. Анти-фродbashdocker exec -it clickhouse clickhouse-client \ --query "SELECT * FROM default.fraud_alerts LIMIT 10;"
+1. Загрузка данных ```bash docker exec -it clickhouse clickhouse-client \ --query "SELECT count() FROM default.raw_impressions;" docker exec -it clickhouse clickhouse-client \ --query "SELECT count() FROM default.raw_clicks;"```
+2. Агрегации Смотрите логи таска run_aggregations в UI или в stdout контейнера:```bash docker logs airflow```
+3. Анти-фрод ```bash docker exec -it clickhouse clickhouse-client \ --query "SELECT * FROM default.fraud_alerts LIMIT 10;"```
 
 ## Состав репозитория
 ```bash
