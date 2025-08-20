@@ -19,9 +19,12 @@ docker exec -it clickhouse clickhouse-client --query "SELECT version();"```
 Как запустить DAG вручную
 • В UI Airflow: найти etl_ads → Trigger DAG.
 Как проверять результаты
-1. Загрузка данных ```bash docker exec -it clickhouse clickhouse-client \ --query "SELECT count() FROM default.raw_impressions;" docker exec -it clickhouse clickhouse-client \ --query "SELECT count() FROM default.raw_clicks;"```
-2. Агрегации Смотрите логи таска run_aggregations в UI или в stdout контейнера:```bash docker logs airflow```
-3. Анти-фрод ```bash docker exec -it clickhouse clickhouse-client \ --query "SELECT * FROM default.fraud_alerts LIMIT 10;"```
+1. Загрузка данных ```bash
+docker exec -it clickhouse clickhouse-client \ --query "SELECT count() FROM default.raw_impressions;" docker exec -it clickhouse clickhouse-client \ --query "SELECT count() FROM default.raw_clicks;"```
+3. Агрегации Смотрите логи таска run_aggregations в UI или в stdout контейнера:```bash
+docker logs airflow```
+5. Анти-фрод ```bash
+docker exec -it clickhouse clickhouse-client \ --query "SELECT * FROM default.fraud_alerts LIMIT 10;"```
 
 ## Состав репозитория
 ```bash
