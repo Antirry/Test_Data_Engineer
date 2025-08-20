@@ -19,7 +19,7 @@ git clone https://github.com/Antirry/Test_Data_Engineer.git cd Test_Data_Enginee
 1. Загрузка данныхbashdocker exec -it clickhouse clickhouse-client \ --query "SELECT count() FROM default.raw_impressions;" docker exec -it clickhouse clickhouse-client \ --query "SELECT count() FROM default.raw_clicks;"
 2. Агрегации Смотрите логи таска run_aggregations в UI или в stdout контейнера:bashdocker logs airflow
 3. Анти-фродbashdocker exec -it clickhouse clickhouse-client \ --query "SELECT * FROM default.fraud_alerts LIMIT 10;"
-
+```
 ## Состав репозитория
 ```bash
 ├── dags/
